@@ -56,7 +56,7 @@ HardwareSerial &serialGSM = Serial1;
 #endif
 
 // Uncomment to see StreamDebugger output in serial monitor
-#define DUMP_AT_COMMANDS 1
+//#define DUMP_AT_COMMANDS 1
 
 #ifdef DUMP_AT_COMMANDS
   #include <StreamDebugger.h>
