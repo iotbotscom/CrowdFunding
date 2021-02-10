@@ -16,6 +16,7 @@ Author                          Date                Revision NUmber          Des
 ------------------------------------------------------------------------------------
 
 iotbotscom                02/09/2021               1.0.0                        Initial release
+iotbotscom                02/10/2021               1.0.1                        Set "Always On" Mode
 
 
 *****************************************************************************/
@@ -88,8 +89,8 @@ DynamicJsonDocument jsonbuf(1024);
 String reqtstr = "";
 
 // Working Mode
-//int demo_mode = MODE_ALWAYS_ON;
-int demo_mode = MODE_ONE_SHOT;
+int demo_mode = MODE_ALWAYS_ON;
+//int demo_mode = MODE_ONE_SHOT;
 
 // Devices status
 bool is_modem_on = false;
