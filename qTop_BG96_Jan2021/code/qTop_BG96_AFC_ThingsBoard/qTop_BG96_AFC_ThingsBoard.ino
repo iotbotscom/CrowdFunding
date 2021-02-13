@@ -17,6 +17,7 @@ Author                          Date                Revision NUmber          Des
 
 iotbotscom                02/09/2021               1.0.0                        Initial release
 iotbotscom                02/10/2021               1.0.1                        Set "Always On" Mode
+iotbotscom                02/11/2021               1.0.2                        Adding : Battery reading as GPIO, GSM Network time
 
 
 *****************************************************************************/
@@ -39,12 +40,19 @@ iotbotscom                02/10/2021               1.0.1                        
 // Publish delay (Device Sleep) timeout for "Always On" mode
 #define MODE_ONE_SHOT_DELAY_TIMEOUT   60000 // 60s
 
+
 // Modem HW Pins
 #define MODEM_PWR_ON_PIN    13
 #define MODEM_ON_PIN        32
 
+// Battery Voltage Pin
+#define BATTERY_PIN         35
+#define BATTERY_K           ((200.0 / 100.0) * (3300.0) / 4096.0)
+
+
 // GNSS Defs
 #define GNSS_FIELDLEN_MAX  32
+
 
 // Modem Serial
 #if (defined(ESP32))
@@ -80,7 +88,8 @@ const char pass[] = "";
 
 // See https://thingsboard.io/docs/getting-started-guides/helloworld/
 // to understand how to obtain an access token
-#define CLOUD_TOKEN   "Your Token"
+#define CLOUD_TOKEN   "psExmXxbIXajWD3Voxnu"
+//#define CLOUD_TOKEN   "Your Token"
 #define CLOUD_SERVER  "thingsboard.cloud"
 #define CLOUD_PORT    80
 
@@ -247,6 +256,41 @@ void loop()
     }
   }
 
+  /* Get Network Time */
+  int gsm_year = 0;
+  int gsm_month = 0;
+  int gsm_day = 0;
+  int gsm_hour = 0;
+  int gsm_min = 0;
+  int gsm_sec = 0;
+  float gsm_timezone = 0;
+  Serial.println("Get Network Time :");
+  if (modem.getNetworkTime(&gsm_year, &gsm_month, &gsm_day, &gsm_hour, &gsm_min, &gsm_sec, &gsm_timezone)) {
+    Serial.print(" Year : ");
+    Serial.println(gsm_year);
+
+    Serial.print(" Month : ");
+    Serial.println(gsm_month);
+
+    Serial.print(" Day : ");
+    Serial.println(gsm_day);
+
+    Serial.print(" Hour : ");
+    Serial.println(gsm_hour);
+
+    Serial.print(" Minute : ");
+    Serial.println(gsm_min);
+
+    Serial.print(" Second : ");
+    Serial.println(gsm_sec);
+
+    Serial.print(" Time Zone : ");
+    Serial.println(gsm_timezone);
+  }
+  else {
+    Serial.println(" failed");
+  }
+
   /* Connect to Cloud */
   if (!client.connected()) {
   Serial.print("Connecting to \"");
@@ -398,6 +442,18 @@ bool publish_data(void )
 
 void get_sensor_data(void )
 {
+  Serial.println("\r\nBattery Voltage: ");
+
+  //get and print battery voltage
+  digitalWrite(BATTERY_EN_PIN, HIGH);
+  delay(100);
+  Serial.print(" Voltage: ");
+  int_battery = (int)(BATTERY_K * (float)analogRead(BATTERY_PIN));
+  Serial.print(int_battery);
+  Serial.println("mV");
+  digitalWrite(BATTERY_EN_PIN, LOW);
+
+
   Serial.println("\r\nBME280 Sensor: ");
 
   if (is_sensor_on) {
@@ -409,7 +465,7 @@ void get_sensor_data(void )
     //get and print atmospheric pressure data
     Serial.print(" Pressure: ");
     Serial.print(pressure = bme280.readPressure() / 100.0F);
-    Serial.println("Pa");
+    Serial.println("hPa");
 
     //get and print humidity data
     Serial.print(" Humidity: ");
@@ -615,3 +671,4 @@ bool getfield(char * pBuf, char * pField, int idx, int len)
 
     return true;
 }
+
