@@ -17,7 +17,7 @@ Author                          Date                Revision NUmber          Des
 
 iotbotscom                02/09/2021               1.0.0                        Initial release
 iotbotscom                02/10/2021               1.0.1                        Set "Always On" Mode
-iotbotscom                02/11/2021               1.0.2                        Adding : Battery reading as GPIO, GSM Network time
+iotbotscom                02/11/2021               1.0.2                        Added : Battery reading through GPIO, GSM Network time
 
 
 *****************************************************************************/
@@ -28,6 +28,7 @@ iotbotscom                02/11/2021               1.0.2                        
 
 #include <ArduinoJson.h>
 #include <Adafruit_BME280.h>
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Demo modes
@@ -40,19 +41,30 @@ iotbotscom                02/11/2021               1.0.2                        
 // Publish delay (Device Sleep) timeout for "Always On" mode
 #define MODE_ONE_SHOT_DELAY_TIMEOUT   60000 // 60s
 
-
 // Modem HW Pins
 #define MODEM_PWR_ON_PIN    13
 #define MODEM_ON_PIN        32
 
 // Battery Voltage Pin
-#define BATTERY_PIN         35
-#define BATTERY_K           ((200.0 / 100.0) * (3300.0) / 4096.0)
+#define ESP_BOARD_HAZZAH32  1
+#define ESP_BOARD_QBOARDA   2
+#define ESP_BOARD_QBOARDB   3
+#define ESP_BOARD_QBOARDX   4
+#define ESP_BOARD           ESP_BOARD_HAZZAH32
 
+#if (defined ESP_BOARD) && (ESP_BOARD == ESP_BOARD_HAZZAH32)
+// Huzzah ESP32
+#define BATTERY_PIN         35
+#define BATTERY_K           ((2) * (3300.0) / 4096.0)
+#elif (defined ESP_BOARD) && (ESP_BOARD == ESP_BOARD_QBOARDB)
+//qBoard-B
+#define BATTERY_EN_PIN      2
+#define BATTERY_PIN         39
+#define BATTERY_K           ((250.0 / 150.0) * (3300.0) / 4096.0)
+#endif
 
 // GNSS Defs
 #define GNSS_FIELDLEN_MAX  32
-
 
 // Modem Serial
 #if (defined(ESP32))
@@ -65,7 +77,6 @@ HardwareSerial &serialGSM = Serial1;
 
 // Uncomment to see StreamDebugger output in serial monitor
 //#define DUMP_AT_COMMANDS 1
-
 #ifdef DUMP_AT_COMMANDS
   #include <StreamDebugger.h>
   StreamDebugger debugger(serialGSM, Serial);
@@ -89,7 +100,6 @@ const char pass[] = "";
 // See https://thingsboard.io/docs/getting-started-guides/helloworld/
 // to understand how to obtain an access token
 #define CLOUD_TOKEN   "psExmXxbIXajWD3Voxnu"
-//#define CLOUD_TOKEN   "Your Token"
 #define CLOUD_SERVER  "thingsboard.cloud"
 #define CLOUD_PORT    80
 
@@ -113,7 +123,7 @@ int rssi = 0;
 float temperature = 0;
 float humidity = 0;
 float pressure = 0;
-float int_battery = 0;
+int int_battery = 0;
 float ext_battery = 0;
 
 // Device GNSS Data
@@ -144,14 +154,14 @@ void setup() {
   if (!bme280.begin(BME280_ADDRESS_ALTERNATE)) {
     Serial.println("No BME280 Sensor Found!");
     is_sensor_on = false;
-  }
-  else {
+  } else {
+/*
     bme280.setSampling(Adafruit_BME280::MODE_FORCED,
                         Adafruit_BME280::SAMPLING_X1,
                         Adafruit_BME280::SAMPLING_X1,
                         Adafruit_BME280::SAMPLING_X1,
                         Adafruit_BME280::FILTER_OFF);
-
+*/
     Serial.println("BME280 Sensor Found!");
     is_sensor_on = true;
   }
@@ -161,6 +171,11 @@ void setup() {
 
   pinMode(MODEM_ON_PIN, OUTPUT);
   digitalWrite(MODEM_ON_PIN, LOW);
+
+#if (defined ESP_BOARD) && (ESP_BOARD == ESP_BOARD_QBOARDB)
+  pinMode(BATTERY_EN_PIN, OUTPUT);
+  digitalWrite(BATTERY_EN_PIN, LOW);
+#endif
 
   delay(3000);
 
@@ -206,8 +221,7 @@ void setup() {
     Serial.println(ccid);
 
     is_modem_on = true;
-  }
-  else {
+  } else {
     Serial.println("No Modem Found");
     is_modem_on = false;
   }
@@ -230,7 +244,7 @@ void loop()
   if (!modem.isNetworkConnected()) {
     Serial.print("Waiting for network...");
     if (!modem.waitForNetwork()) {
-      Serial.println(" fail");
+      Serial.println(" failed");
       delay(10000);
       return;
     }
@@ -246,7 +260,7 @@ void loop()
     Serial.print(apn);
     Serial.print("\"...");
     if (!modem.gprsConnect(apn, user, pass)) {
-      Serial.println(" fail");
+      Serial.println(" failed");
       delay(10000);
       return;
     }
@@ -286,8 +300,7 @@ void loop()
 
     Serial.print(" Time Zone : ");
     Serial.println(gsm_timezone);
-  }
-  else {
+  } else {
     Serial.println(" failed");
   }
 
@@ -297,7 +310,7 @@ void loop()
     Serial.print(CLOUD_SERVER);
     Serial.print("\"...");
     if (!client.connect(CLOUD_SERVER, CLOUD_PORT)) {
-      Serial.println(" fail");
+      Serial.println(" failed");
       delay(10000);
       return;
     }
@@ -317,8 +330,7 @@ void loop()
   if (demo_mode == MODE_ALWAYS_ON) {
     /* Always On mode - just wait and start new Data Obtain-Publish cycle again */
     delay(MODE_ALWAYS_ON_DELAY_TIMEOUT);
-  }
-  else {
+  } else {
     /* One Shot mode */
 
     /* Disconnect from Cloud */
@@ -337,7 +349,7 @@ void loop()
     is_modem_on = false;
     Serial.println("Modem Off");
 
-    // BME280 : Nothing to be done - sensor works in Forced Mode
+    // BME280 : Nothing to be done - sensor works in Forced Mode : Issue found : TBD
     //Serial.println("Turn BME280 Off");
 
     /* Move Core to Deep Sleep */
@@ -432,8 +444,7 @@ bool publish_data(void )
     Serial.println();
 
     return true;
-  }
-  else {
+  } else {
     Serial.println("...No Reply received");
 
     return false;
@@ -442,37 +453,46 @@ bool publish_data(void )
 
 void get_sensor_data(void )
 {
-  Serial.println("\r\nBattery Voltage: ");
+  Serial.println("\r\nBattery: ");
 
   //get and print battery voltage
+
+#if (defined ESP_BOARD) && (ESP_BOARD == ESP_BOARD_QBOARDB)
   digitalWrite(BATTERY_EN_PIN, HIGH);
-  delay(100);
-  Serial.print(" Voltage: ");
+  delay(500);
+#endif
+  Serial.print(" Voltage, mV: ");
   int_battery = (int)(BATTERY_K * (float)analogRead(BATTERY_PIN));
-  Serial.print(int_battery);
-  Serial.println("mV");
+  Serial.println(int_battery);
+  Serial.print(" Voltage, %: ");
+  int_battery = (int)((((float)int_battery - 3400.0) / (4200.0 - 3400.0)) * 100.0);
+  if(int_battery > 100)
+  {
+    int_battery = 100;
+  }
+  Serial.println(int_battery);
+#if (defined ESP_BOARD) && (ESP_BOARD == ESP_BOARD_QBOARDB)
   digitalWrite(BATTERY_EN_PIN, LOW);
+#endif
 
 
   Serial.println("\r\nBME280 Sensor: ");
 
   if (is_sensor_on) {
     //get and print temperatures
-    Serial.print(" Temp: ");
-    Serial.print(temperature = bme280.readTemperature());
-    Serial.println("C");//The unit for  Celsius because original arduino don't support special symbols
+    Serial.print(" Temperature, F: ");
+    temperature = bme280.readTemperature();
+    temperature = ((temperature * 9 / 5) + 32);
+    Serial.println(temperature);
 
     //get and print atmospheric pressure data
-    Serial.print(" Pressure: ");
-    Serial.print(pressure = bme280.readPressure() / 100.0F);
-    Serial.println("hPa");
+    Serial.print(" Pressure, hPa: ");
+    Serial.println(pressure = bme280.readPressure() / 100.0);
 
     //get and print humidity data
-    Serial.print(" Humidity: ");
-    Serial.print(humidity = bme280.readHumidity());
-    Serial.println("%");
-  }
-  else {
+    Serial.print(" Humidity, %: ");
+    Serial.println(humidity = bme280.readHumidity());
+  } else {
     Serial.println("...No Data Available!");
   }
 }
@@ -483,15 +503,14 @@ void get_modem_data(void )
   int8_t percent     = 0;
   uint16_t milliVolts  = 0;
 
-  // Get Battery
-  Serial.println("\r\nBattery: ");
+  // Get Modem Voltage
+  Serial.println("\r\nModem Power: ");
 
   modem.getBattStats(chargeState, percent, milliVolts);
-  Serial.print(" Battery, %: ");
-  Serial.println((int)percent);
-  Serial.print(" Battery, mV: ");
+  //Serial.print(" Voltage, %: ");
+  //Serial.println((int)percent);
+  Serial.print(" Voltage, mV: ");
   Serial.println((int)milliVolts);
-  int_battery = milliVolts;
 
   // Get RSSI
   Serial.println("\r\nSignal Quality: ");
@@ -511,11 +530,15 @@ void get_gnss_data(void )
   // Get GNSS Data
   Serial.println("\r\nGNSS: ");
 
+#if 0
+  String gnss_str = "113521.0,42.486973,-83.470669,1.1,281.0,2,12.00,71.0,0.0,120221,07";
+#else
   String gnss_str = modem.getGPSraw();
+#endif
 
   len = gnss_str.length();
   if (len) {
-    gnss_str.getBytes((byte *)buf, len);
+    gnss_str.getBytes((byte *)buf, len + 1);
 
     //Serial.println(buf);
 
@@ -526,21 +549,17 @@ void get_gnss_data(void )
 
     if (getfield(buf, pField, 1, GNSS_FIELDLEN_MAX)) {
         strcpy(latitude, (char *)pField);
-        latitude[10] = latitude[9];
-        latitude[9] = ';';
-        latitude[11] = 0;
+        latitude[9] = 0;
     }
 
     if (getfield(buf, pField, 2, GNSS_FIELDLEN_MAX)) {
         strcpy(longitude, (char *)pField);
-        longitude[11] = longitude[10];
-        longitude[10] = ';';
-        longitude[12] = 0;
+        longitude[10] = 0;
     }
 
     if (getfield(buf, pField, 3, GNSS_FIELDLEN_MAX)) {
         strcpy(hdop, (char *)pField);
-        hdop[3] = 0;
+        hdop[4] = 0;
     }
 
     if (getfield(buf, pField, 4, GNSS_FIELDLEN_MAX)) {
@@ -607,10 +626,10 @@ void get_gnss_data(void )
     Serial.print(" Longitude : ");
     Serial.println((char *)longitude);
 
-    Serial.print(" Altitude : ");
+    Serial.print(" Altitude, m : ");
     Serial.println((char *)altitude);
 
-    Serial.print(" Speed : ");
+    Serial.print(" Speed, km/h : ");
     Serial.println((char *)speed);
 
     Serial.print(" Heading : ");
@@ -623,8 +642,7 @@ void get_gnss_data(void )
     Serial.println((char *)nsat);
 
     is_gnss_ready = true;
-  }
-  else {
+  } else {
     Serial.println(" ...No Data Available!");
     is_gnss_ready = false;
   }
