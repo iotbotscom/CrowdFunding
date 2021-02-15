@@ -530,11 +530,7 @@ void get_gnss_data(void )
   // Get GNSS Data
   Serial.println("\r\nGNSS: ");
 
-#if 0
-  String gnss_str = "113521.0,42.486973,-83.470669,1.1,281.0,2,12.00,71.0,0.0,120221,07";
-#else
   String gnss_str = modem.getGPSraw();
-#endif
 
   len = gnss_str.length();
   if (len) {
