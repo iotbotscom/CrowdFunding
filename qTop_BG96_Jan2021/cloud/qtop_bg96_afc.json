@@ -22,7 +22,7 @@
                 {
                   "name": "Temperature",
                   "type": "timeseries",
-                  "label": "Temperature",
+                  "label": "Temperature, F",
                   "color": "#2196f3",
                   "settings": {},
                   "_hash": 0.10667271164227277,
@@ -45,7 +45,7 @@
           "color": "rgba(0, 0, 0, 0.87)",
           "padding": "8px",
           "settings": {
-            "maxValue": 85,
+            "maxValue": 130,
             "startAngle": 45,
             "ticksAngle": 270,
             "showBorder": true,
@@ -98,7 +98,7 @@
             "colorValueBoxRectEnd": "#666",
             "colorValueBoxBackground": "#babab2",
             "colorValueBoxShadow": "rgba(0,0,0,1)",
-            "minValue": -40
+            "minValue": -20
           },
           "title": "Temperature",
           "dropShadow": true,
@@ -179,8 +179,17 @@
             }
           ],
           "timewindow": {
+            "hideInterval": false,
+            "hideAggregation": false,
+            "hideAggInterval": false,
+            "selectedTab": 0,
             "realtime": {
-              "timewindowMs": 60000
+              "timewindowMs": 900000,
+              "interval": 1000
+            },
+            "aggregation": {
+              "type": "AVG",
+              "limit": 25000
             }
           },
           "showTitle": false,
@@ -193,7 +202,7 @@
             "lngKeyName": "longitude",
             "showLabel": false,
             "label": "${entityName}",
-            "tooltipPattern": "<b>${entityName}</b><br/><br/><b>Latitude:</b> ${latitude:7}<br/><b>Longitude:</b> ${longitude:7}<br/><b>Speed:</b> ${speed} km<br/><b>Temperature:</b> ${Temperature:} C<br/><b>Bat.voltage:</b> ${Bat.voltage:} mV<br/>",
+            "tooltipPattern": "<b>${entityName}</b><br/><br/><b>Latitude:</b> ${latitude:7}<br/><b>Longitude:</b> ${longitude:7}<br/><b>Speed:</b> ${speed} km/h<br/><b>Temperature:</b> ${Temperature:} F<br/><b>Bat.voltage:</b> ${Bat.voltage:} %<br/>",
             "markerImageSize": 34,
             "useColorFunction": true,
             "markerImages": [
@@ -218,7 +227,13 @@
             "mapPageSize": 16384,
             "useLabelFunction": true,
             "useTooltipFunction": false,
-            "useDefaultCenterPosition": true
+            "useDefaultCenterPosition": true,
+            "showPolygon": false,
+            "polygonKeyName": "coordinates",
+            "polygonOpacity": 0.5,
+            "polygonStrokeOpacity": 1,
+            "polygonStrokeWeight": 1,
+            "polygonTooltipPattern": "<b>${entityName}</b><br/><br/><b>TimeStamp:</b> ${ts:7}"
           },
           "title": "Map",
           "dropShadow": true,
@@ -227,7 +242,7 @@
             "fontSize": "16px",
             "fontWeight": 400
           },
-          "useDashboardTimewindow": true,
+          "useDashboardTimewindow": false,
           "showLegend": false,
           "widgetStyle": {},
           "actions": {},
@@ -244,7 +259,8 @@
             "showMax": false,
             "showAvg": true,
             "showTotal": false
-          }
+          },
+          "displayTimewindow": true
         },
         "row": 0,
         "col": 0,
@@ -269,7 +285,7 @@
                 {
                   "name": "Humidity",
                   "type": "timeseries",
-                  "label": "Humidity",
+                  "label": "Humidity, %",
                   "color": "#2196f3",
                   "settings": {},
                   "_hash": 0.02985784346307563,
@@ -386,7 +402,7 @@
                 {
                   "name": "Pressure",
                   "type": "timeseries",
-                  "label": "Pressure",
+                  "label": "Pressure, hPa",
                   "color": "#2196f3",
                   "settings": {},
                   "_hash": 0.1698046621446625,
@@ -502,7 +518,7 @@
                 {
                   "name": "speed",
                   "type": "timeseries",
-                  "label": "speed",
+                  "label": "Speed, km/h",
                   "color": "#2196f3",
                   "settings": {},
                   "_hash": 0.6572307192439375,
@@ -590,8 +606,7 @@
             "colorValueBoxRect": "#888",
             "colorValueBoxRectEnd": "#666",
             "colorValueBoxBackground": "#babab2",
-            "colorValueBoxShadow": "rgba(0,0,0,1)",
-            "unitTitle": "Speed"
+            "colorValueBoxShadow": "rgba(0,0,0,1)"
           },
           "title": "New Speed gauge - Canvas Gauges",
           "dropShadow": true,
@@ -624,10 +639,15 @@
                 {
                   "name": "Bat.voltage",
                   "type": "timeseries",
-                  "label": "Bat.voltage",
+                  "label": "Battery",
                   "color": "#2196f3",
                   "settings": {},
-                  "_hash": 0.1675584921883333
+                  "_hash": 0.1675584921883333,
+                  "units": null,
+                  "decimals": null,
+                  "funcBody": null,
+                  "usePostProcessing": null,
+                  "postFuncBody": null
                 }
               ]
             }
@@ -642,7 +662,7 @@
           "color": "#07771d",
           "padding": "0px",
           "settings": {
-            "maxValue": 4200,
+            "maxValue": 100,
             "donutStartAngle": 90,
             "showValue": true,
             "showMinMax": true,
@@ -683,7 +703,7 @@
             "gaugeColor": "#ffffff",
             "gaugeType": "verticalBar",
             "showTitle": true,
-            "minValue": 3200,
+            "minValue": 0,
             "dashThickness": 1.2,
             "animation": true,
             "animationDuration": 500,
@@ -691,9 +711,9 @@
             "timestampFormat": "yyyy-MM-dd HH:mm:ss",
             "useFixedLevelColor": false,
             "defaultColor": "#000000",
-            "title": "Battery"
+            "roundedLineCap": false
           },
-          "title": "Battery",
+          "title": "Battery, %",
           "dropShadow": true,
           "enableFullscreen": true,
           "titleStyle": {
@@ -850,7 +870,7 @@
                 {
                   "name": "Temperature",
                   "type": "timeseries",
-                  "label": "Temperature",
+                  "label": "Temperature, F",
                   "color": "#21f338",
                   "settings": {
                     "excludeFromStacking": false,
@@ -891,8 +911,8 @@
             "hideAggInterval": false,
             "selectedTab": 0,
             "realtime": {
-              "timewindowMs": 600000,
-              "interval": 15000
+              "timewindowMs": 120000,
+              "interval": 1000
             },
             "aggregation": {
               "type": "AVG",
@@ -914,8 +934,8 @@
             "yaxis": {
               "showLabels": true,
               "color": "#545454",
-              "min": -40,
-              "max": 85
+              "max": 185,
+              "min": -20
             },
             "grid": {
               "color": "#545454",
@@ -934,7 +954,7 @@
             "smoothLines": true,
             "tooltipCumulative": true
           },
-          "title": "Temperature",
+          "title": "Temperature, F",
           "dropShadow": true,
           "enableFullscreen": true,
           "titleStyle": {
@@ -1024,7 +1044,7 @@
             "hideAggInterval": false,
             "selectedTab": 0,
             "realtime": {
-              "timewindowMs": 600000,
+              "timewindowMs": 120000,
               "interval": 1000
             },
             "aggregation": {
@@ -1066,7 +1086,7 @@
             },
             "smoothLines": true
           },
-          "title": "Humidity",
+          "title": "Humidity, %",
           "dropShadow": true,
           "enableFullscreen": true,
           "titleStyle": {
@@ -1156,7 +1176,7 @@
             "hideAggInterval": false,
             "selectedTab": 0,
             "realtime": {
-              "timewindowMs": 600000,
+              "timewindowMs": 120000,
               "interval": 1000
             },
             "aggregation": {
@@ -1197,7 +1217,7 @@
               "showLabels": true
             }
           },
-          "title": "Pressure",
+          "title": "Pressure, hPa",
           "dropShadow": true,
           "enableFullscreen": true,
           "titleStyle": {
@@ -1258,7 +1278,8 @@
             "displayEntityName": false,
             "displayEntityType": false,
             "entitiesTitle": "Device admin table",
-            "enableSelectColumnDisplay": false
+            "enableSelectColumnDisplay": false,
+            "displayEntityLabel": false
           },
           "title": "GNSS Info",
           "dropShadow": true,
@@ -1545,7 +1566,7 @@
           "resolveMultiple": false,
           "singleEntity": {
             "entityType": "DEVICE",
-            "id": "1446c280-68d0-11eb-a933-49c49a2678f9"
+            "id": "ae1c6350-6b6f-11eb-9518-1b2d3c2f717b"
           }
         }
       }
