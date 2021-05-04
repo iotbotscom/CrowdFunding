@@ -1,5 +1,6 @@
 The latest version of source code is located there:
-https://www.iot-bots.com/blogs/news/get-your-nice-looking-iot-dashboard-in-a-minute-with-our-diy-iot-esp32-bg96-bme280-thingsboard-solution
+
+https://github.com/iotbotscom/qTop_BG96_AFC_ThingsBoard
 
 Thank you,
 iotbotscom
